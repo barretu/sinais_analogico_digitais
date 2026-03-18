@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sinais Analógico & Digital</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --analog: #00e5ff;
+    --digital: #ff6b6b;
+    --sample: #ffd166;
+    --text: #e0e0f0;
+    --muted: #5a5a7a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: clamp(1rem, 4vw, 2.5rem);
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 5vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, var(--analog), var(--digital));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.6rem, 2vw, 0.72rem);
+    color: var(--muted);
+    margin-bottom: clamp(1rem, 3vw, 1.8rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .legend {
+    display: flex;
+    gap: clamp(0.8rem, 2vw, 1.5rem);
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.6rem, 2vw, 0.72rem);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .legend-line {
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .canvas-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    min-height: 160px;
+    max-height: 340px;
+    margin-bottom: clamp(1rem, 3vw, 2rem);
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .control-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: clamp(1rem, 3vw, 1.4rem) clamp(1rem, 3vw, 1.6rem);
+    margin-bottom: clamp(1rem, 3vw, 2rem);
+  }
+
+  .control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .control-label {
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .control-value {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+    font-weight: 700;
+    color: var(--sample);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: clamp(22px, 5vw, 26px);
+    height: clamp(22px, 5vw, 26px);
+    background: var(--sample);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover,
+  input[type=range]::-webkit-slider-thumb:active {
+    box-shadow: 0 0 20px rgba(255, 209, 102, 0.85);
+  }
+
+  input[type=range]::-moz-range-thumb {
+    width: clamp(22px, 5vw, 26px);
+    height: clamp(22px, 5vw, 26px);
+    background: var(--sample);
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+    cursor: pointer;
+  }
+
+  .quality-bar-wrap {
+    margin-top: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .quality-label {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.58rem, 1.8vw, 0.65rem);
+    color: var(--muted);
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .quality-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .quality-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  .section-title {
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: clamp(0.6rem, 2vw, 1rem);
+    color: var(--text);
+  }
+
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: clamp(0.6rem, 2vw, 1rem);
+    margin-top: 0.5rem;
+  }
+
+  .explain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: clamp(0.9rem, 2.5vw, 1.2rem);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .explain-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .card-analog::before  { background: var(--analog); }
+  .card-digital::before { background: var(--digital); }
+  .card-sample::before  { background: var(--sample); }
+
+  .card-title {
+    font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .card-content {
+    font-size: clamp(0.78rem, 2vw, 0.85rem);
+    line-height: 1.6;
+    color: #b0b0cc;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.58rem, 1.6vw, 0.65rem);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-analog  { background: rgba(0,229,255,0.1);   color: var(--analog); }
+  .tag-digital { background: rgba(255,107,107,0.1); color: var(--digital); }
+  .tag-sample  { background: rgba(255,209,102,0.1); color: var(--sample); }
+
+  @media (max-width: 380px) {
+    .legend { display: grid; grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Sinais Analógico & Digital</h1>
+  <p class="subtitle">Visualização interativa — arraste o slider e observe o impacto</p>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-line" style="background: var(--analog);"></div>
+      <span>Sinal Analógico</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="height:0; border-top: 2px dashed var(--digital); width:22px; flex-shrink:0;"></div>
+      <span>Sinal Digital</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: var(--sample);"></div>
+      <span>Amostras</span>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="control-box">
+    <div class="control-header">
+      <span class="control-label">Sample Rate</span>
+      <span class="control-value" id="srLabel">8 samples/ciclo</span>
+    </div>
+    <input type="range" id="srSlider" min="2" max="40" value="8" step="1">
+    <div class="quality-bar-wrap">
+      <span class="quality-label">Qualidade</span>
+      <div class="quality-bar">
+        <div class="quality-fill" id="qualityFill"></div>
+      </div>
+      <span class="quality-label" id="qualityLabel">—</span>
+    </div>
+  </div>
+
+  <p class="section-title">O que está acontecendo?</p>
+  <div class="explain-grid">
+    <div class="explain-card card-analog">
+      <div class="tag tag-analog">Analógico</div>
+      <div class="card-title">Sinal Contínuo</div>
+      <div class="card-content">A curva azul representa o sinal original — uma onda senoidal contínua, com infinitos valores possíveis ao longo do tempo.</div>
+    </div>
+    <div class="explain-card card-sample">
+      <div class="tag tag-sample">Amostragem</div>
+      <div class="card-title">O que é Sample Rate?</div>
+      <div class="card-content">É quantas vezes por segundo o sinal analógico é medido. Cada ponto amarelo é uma amostra. Mais amostras = mais fidelidade ao original.</div>
+    </div>
+    <div class="explain-card card-digital">
+      <div class="tag tag-digital">Digital</div>
+      <div class="card-title">Sinal Reconstruído</div>
+      <div class="card-content">A linha vermelha é o sinal digital: uma aproximação escalonada formada pelos valores das amostras. Com poucas amostras, a forma original se perde.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const canvas       = document.getElementById('chart');
+  const ctx          = canvas.getContext('2d');
+  const slider       = document.getElementById('srSlider');
+  const srLabel      = document.getElementById('srLabel');
+  const qualityFill  = document.getElementById('qualityFill');
+  const qualityLabel = document.getElementById('qualityLabel');
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr  = window.devicePixelRatio || 1;
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+    draw();
+  }
+
+  function draw() {
+    const W       = canvas.getBoundingClientRect().width;
+    const H       = canvas.getBoundingClientRect().height;
+    const samples = parseInt(slider.value);
+    const isMobile = W < 480;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const padX = isMobile ? 24 : 40;
+    const padY = isMobile ? 18 : 28;
+    const gW   = W - padX * 2;
+    const gH   = H - padY * 2;
+    const midY = padY + gH / 2;
+    const amp  = gH * 0.38;
+
+    ctx.strokeStyle = '#1e1e2e';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padY + (gH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + gW, y); ctx.stroke();
+    }
+    const cols = isMobile ? 4 : 8;
+    for (let i = 0; i <= cols; i++) {
+      const x = padX + (gW / cols) * i;
+      ctx.beginPath(); ctx.moveTo(x, padY); ctx.lineTo(x, padY + gH); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#2e2e4e';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padX, padY); ctx.lineTo(padX, padY + gH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padX, midY); ctx.lineTo(padX + gW, midY); ctx.stroke();
+
+    const freq = 2;
+    const xToT = x => ((x - padX) / gW) * freq * Math.PI * 2;
+    const yVal = t => midY - Math.sin(t) * amp;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = isMobile ? 2 : 2.5;
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur  = 8;
+    for (let px = padX; px <= padX + gW; px++) {
+      px === padX ? ctx.moveTo(px, yVal(xToT(px))) : ctx.lineTo(px, yVal(xToT(px)));
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    const totalSamples = samples * freq;
+    const step = gW / totalSamples;
+    const pts  = [];
+    for (let i = 0; i <= totalSamples; i++) {
+      const px = padX + i * step;
+      pts.push({ x: px, y: yVal(xToT(px)) });
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = isMobile ? 1.5 : 2;
+    ctx.setLineDash([5, 3]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      ctx.moveTo(pts[i].x,   pts[i].y);
+      ctx.lineTo(pts[i+1].x, pts[i].y);
+      ctx.lineTo(pts[i+1].x, pts[i+1].y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const dotR = isMobile ? 3 : 4;
+    for (const { x, y } of pts) {
+      ctx.beginPath();
+      ctx.arc(x, y, dotR, 0, Math.PI * 2);
+      ctx.fillStyle   = '#ffd166';
+      ctx.shadowColor = '#ffd166';
+      ctx.shadowBlur  = 9;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    if (!isMobile) {
+      ctx.font      = '11px Space Mono, monospace';
+      ctx.fillStyle = '#5a5a7a';
+      ctx.fillText('t (tempo)', padX + gW - 55, midY + 18);
+      ctx.fillText('A', padX - 14, padY + 5);
+    }
+  }
+
+  function updateQuality() {
+    const v   = parseInt(slider.value);
+    const pct = Math.round(((v - 2) / 38) * 100);
+    qualityFill.style.width = pct + '%';
+
+    let color, label;
+    if      (v <= 4)  { color = '#ff4444'; label = 'Aliasing severo'; }
+    else if (v <= 8)  { color = '#ff9944'; label = 'Baixa fidelidade'; }
+    else if (v <= 16) { color = '#ffd166'; label = 'Aceitável'; }
+    else if (v <= 28) { color = '#88dd66'; label = 'Boa qualidade'; }
+    else              { color = '#00e5ff'; label = 'Alta fidelidade'; }
+
+    qualityFill.style.background = color;
+    qualityLabel.textContent      = label;
+    qualityLabel.style.color      = color;
+    srLabel.textContent           = `${v} samples/ciclo`;
+  }
+
+  slider.addEventListener('input', () => { draw(); updateQuality(); });
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resizeCanvas, 60);
+  });
+
+  const init = () => { resizeCanvas(); updateQuality(); };
+  document.fonts && document.fonts.ready ? document.fonts.ready.then(init) : init();
+</script>
+</body>
+</html>
